@@ -1,5 +1,4 @@
 const inquirer = require('inquirer');
-const { listenerCount } = require('./config/connection');
 const db = require('./config/connection');
 
 function init() {
@@ -15,6 +14,7 @@ function init() {
                     'Add an employee',
                     'Update employee role',
                     'Update employee manager',
+                    'View employees by manager',
                     'Quit'],
                 message: 'What would you like to do ?'
             }
@@ -66,7 +66,7 @@ function init() {
                         CONCAT (M.first_name, ' ', M.last_name) AS manager
                         FROM employee AS M
 
-                        RIGHT JOIN employee E
+                        RIGHT JOIN employee as E
                         ON E.manager_id=M.id
 
                         RIGHT JOIN role AS R 
@@ -283,6 +283,53 @@ function init() {
                                         console.log(`Manager successfully updated !`);
                                         init();
                                     })
+                            })
+                    })
+                case 'View employees by manager':
+                    db.query(`SELECT * FROM employee`, (err, res) => {
+                        if (err) throw (err);
+                        let employees = res.map(employee => ({ name: employee.first_name + ' ' + employee.last_name, value: employee.id }));
+
+                        inquirer
+                            .prompt([
+                                {
+                                    type: 'list',
+                                    name: 'viewByMgr',
+                                    message: 'Select a manager to view their team: ',
+                                    choices: employees
+                                }
+                            ])
+                            .then((data) => {
+                                db.query(`SELECT E.id, 
+                                E.first_name, 
+                                E.last_name, 
+                                R.title,
+                                R.salary,
+                                D.name AS department,
+                                CONCAT (M.first_name, ' ', M.last_name) AS manager
+                                FROM employee AS M
+        
+                                RIGHT JOIN employee as E
+                                ON E.manager_id=M.id
+        
+                                RIGHT JOIN role AS R 
+                                ON E.role_id=R.id 
+        
+                                RIGHT JOIN department AS D 
+                                ON R.department_id=D.id
+
+                                WHERE E.manager_id = ${data.viewByMgr} 
+                                ORDER BY E.id ASC`,
+
+                                    (err, res) => {
+                                        if (err) throw (err);
+
+                                        console.log('Viewing employees by manager: ')
+                                        console.table(res);
+
+                                        init();
+                                    })
+
                             })
                     })
                 case 'Quit':
