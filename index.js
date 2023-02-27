@@ -16,6 +16,9 @@ function init() {
                     'Update employee manager',
                     'View employees by manager',
                     'View employees by department',
+                    'Delete a role',
+                    'Delete a department',
+                    'Delete an employee',
                     'Quit'],
                 message: 'What would you like to do ?'
             }
@@ -286,6 +289,7 @@ function init() {
                                     })
                             })
                     })
+                    break;
                 case 'View employees by manager':
                     db.query(`SELECT * FROM employee`, (err, res) => {
                         if (err) throw (err);
@@ -333,6 +337,7 @@ function init() {
 
                             })
                     })
+                    break;
                 case 'View employees by department':
                     db.query(`SELECT * FROM department`, (err, res) => {
                         if (err) throw (err);
@@ -379,6 +384,94 @@ function init() {
                                     })
                             })
                     })
+                    break;
+                case 'Delete a role':
+                    db.query(`SELECT * FROM role`, (err, res) => {
+                        if (err) throw (err);
+
+                        let roles = res.map(role => ({ name: role.title, value: role.id }));
+
+                        inquirer
+                            .prompt([
+                                {
+                                    type: 'list',
+                                    name: 'delRole',
+                                    message: 'Select a role to delete: ',
+                                    choices: roles
+                                }
+                            ])
+                            .then((data) => {
+                                db.query(`DELETE FROM role WHERE ?`,
+                                    [
+                                        { id: data.delRole },
+
+                                    ], (err, res) => {
+                                        if (err) throw (err);
+
+                                        console.log('Role successfully deleted !');
+                                        init();
+                                    })
+                            })
+                    })
+                    break;
+                case 'Delete a department':
+                    db.query(`SELECT * FROM department`, (err, res) => {
+                        if (err) throw (err);
+
+                        let departments = res.map(department => ({ name: department.name, value: department.id }));
+
+                        inquirer
+                            .prompt([
+                                {
+                                    type: 'list',
+                                    name: 'delDept',
+                                    message: 'Select a department to delete: ',
+                                    choices: departments
+                                }
+                            ])
+                            .then((data) => {
+                                db.query(`DELETE FROM department WHERE ?`,
+                                    [
+                                        { id: data.delDept },
+
+                                    ], (err, res) => {
+                                        if (err) throw (err);
+
+                                        console.log('Department successfully deleted !');
+                                        init();
+                                    })
+                            })
+                    })
+                    break;
+                case 'Delete an employee':
+                    db.query(`SELECT * FROM employee`, (err, res) => {
+                        if (err) throw (err);
+
+                        let employees = res.map(employee => ({ name: employee.first_name + ' ' + employee.last_name, value: employee.id }));
+
+                        inquirer
+                            .prompt([
+                                {
+                                    type: 'list',
+                                    name: 'delEmp',
+                                    message: 'Select an employee to delete: ',
+                                    choices: employees
+                                }
+                            ])
+                            .then((data) => {
+                                db.query(`DELETE FROM employee WHERE ?`,
+                                    [
+                                        { id: data.delEmp },
+
+                                    ], (err, res) => {
+                                        if (err) throw (err);
+
+                                        console.log('Employee successfully deleted !');
+                                        init();
+                                    })
+                            })
+                    })
+                    break;
                 case 'Quit':
                     return;
             }
