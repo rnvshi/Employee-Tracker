@@ -16,6 +16,7 @@ function init() {
                     'Update employee manager',
                     'View employees by manager',
                     'View employees by department',
+                    'View department salary',
                     'Delete a role',
                     'Delete a department',
                     'Delete an employee',
@@ -90,6 +91,41 @@ function init() {
 
                     break;
 
+                case 'View department salary':
+                    db.query(`SELECT * FROM department`, (err, res) => {
+                        if (err) throw (err);
+
+                        let departments = res.map(department => ({ name: department.name, value: department.id }));
+
+                        inquirer
+                            .prompt([
+                                {
+                                    type: 'list',
+                                    name: 'viewDeptSalary',
+                                    message: "Select a department to calculate the total salary",
+                                    choices: departments
+                                }
+                            ])
+                            .then((data) => {
+
+                                db.query(`SELECT department_id, SUM(role.salary) AS department_budget FROM role WHERE ?`,
+                                    [
+                                        {
+                                            department_id: data.viewDeptSalary
+                                        },
+                                    ],
+                                    (err, res) => {
+                                        if (err) throw (err);
+
+                                        console.log(`The total budget for this department is: `);
+                                        console.table(res);
+                                        init();
+                                    }
+                                )
+
+                            })
+                    })
+                    break;
                 case 'Add a department':
                     inquirer
                         .prompt([
