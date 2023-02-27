@@ -14,6 +14,7 @@ function init() {
                     'Add a department', 'Add a role',
                     'Add an employee',
                     'Update employee role',
+                    'Update employee manager',
                     'Quit'],
                 message: 'What would you like to do ?'
             }
@@ -250,6 +251,40 @@ function init() {
                         })
                     })
                     break;
+                case 'Update employee manager':
+                    db.query(`SELECT * FROM employee`, (err, res) => {
+                        if (err) throw (err);
+                        let employees = res.map(employee => ({ name: employee.first_name + ' ' + employee.last_name, value: employee.id }));
+
+                        inquirer
+                            .prompt([
+                                {
+                                    type: 'list',
+                                    name: 'employee',
+                                    message: 'Select an employee to update the manager: ',
+                                    choices: employees
+                                },
+                                {
+                                    type: 'list',
+                                    name: 'newMgr',
+                                    message: 'Select a new manager for this employee: ',
+                                    choices: employees
+                                }
+                            ])
+                            .then((data) => {
+                                db.query(`UPDATE employee SET ? WHERE ?`,
+                                    [
+                                        { manager_id: data.newMgr },
+                                        { id: data.employee }
+                                    ],
+                                    (err, res) => {
+                                        if (err) throw (err);
+
+                                        console.log(`Manager successfully updated !`);
+                                        init();
+                                    })
+                            })
+                    })
                 case 'Quit':
                     return;
             }
