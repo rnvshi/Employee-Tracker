@@ -15,6 +15,7 @@ function init() {
                     'Update employee role',
                     'Update employee manager',
                     'View employees by manager',
+                    'View employees by department',
                     'Quit'],
                 message: 'What would you like to do ?'
             }
@@ -330,6 +331,52 @@ function init() {
                                         init();
                                     })
 
+                            })
+                    })
+                case 'View employees by department':
+                    db.query(`SELECT * FROM department`, (err, res) => {
+                        if (err) throw (err);
+                        let departments = res.map(department => ({ name: department.name, value: department.id }));
+
+                        inquirer
+                            .prompt([
+                                {
+                                    type: 'list',
+                                    name: 'viewByDept',
+                                    message: 'Select a depatment to view its employees: ',
+                                    choices: departments
+                                }
+                            ])
+                            .then((data) => {
+                                db.query(`SELECT E.id, 
+                                E.first_name, 
+                                E.last_name, 
+                                R.title,
+                                R.salary,
+                                D.name AS department,
+                                CONCAT (M.first_name, ' ', M.last_name) AS manager
+                                FROM employee AS M
+        
+                                RIGHT JOIN employee as E
+                                ON E.manager_id=M.id
+        
+                                RIGHT JOIN role AS R 
+                                ON E.role_id=R.id 
+        
+                                RIGHT JOIN department AS D 
+                                ON R.department_id=D.id
+
+                                WHERE D.id = ${data.viewByDept} 
+                                ORDER BY E.id ASC`,
+
+                                    (err, res) => {
+                                        if (err) throw (err);
+
+                                        console.log('Viewing employees by department: ')
+                                        console.table(res);
+
+                                        init();
+                                    })
                             })
                     })
                 case 'Quit':
